@@ -1,0 +1,87 @@
+{
+  "baseline": {
+    "name": "Zstd level 22",
+    "package": "zstandard",
+    "version_pin": "0.25.0",
+    "level": 22,
+    "mode": "ZstdCompressor(level=22).compress(data)",
+    "notes": "Primary comparison baseline. Pure zstandard frames (not BAV-wrapped). Level 22 is maximum zstd compression."
+  },
+  "research": {
+    "name": "Brotli-AV (BAV1)",
+    "method": "auto",
+    "entry": "python -m bav compress",
+    "notes": "Adaptive multi-backend: store/deflate/lzma-extreme/zstd-22/brotli-11 + research transpose and MTF/RLE0 prefilters; smallest BAV1 frame wins."
+  },
+  "files": [
+    {
+      "file": "01_plain_text.txt",
+      "uncompressed": 81601,
+      "zstd22_size": 13882,
+      "bav_size": 13798,
+      "zstd22_ratio": 0.17012046420999744,
+      "bav_ratio": 0.1690910650604772,
+      "zstd22_compress_s": 0.009458,
+      "bav_compress_s": 0.753442,
+      "bav_wins": true,
+      "delta_bytes": 84
+    },
+    {
+      "file": "02_html_js.html",
+      "uncompressed": 35093,
+      "zstd22_size": 1642,
+      "bav_size": 1262,
+      "zstd22_ratio": 0.04678995811130425,
+      "bav_ratio": 0.03596158778103895,
+      "zstd22_compress_s": 0.017546,
+      "bav_compress_s": 0.689964,
+      "bav_wins": true,
+      "delta_bytes": 380
+    },
+    {
+      "file": "03_binary_records.bin",
+      "uncompressed": 30512,
+      "zstd22_size": 16955,
+      "bav_size": 1764,
+      "zstd22_ratio": 0.5556830099632931,
+      "bav_ratio": 0.057813319349764025,
+      "zstd22_compress_s": 0.00188,
+      "bav_compress_s": 0.741115,
+      "bav_wins": true,
+      "delta_bytes": 15191
+    },
+    {
+      "file": "04_mixed_archive.bin",
+      "uncompressed": 12075,
+      "zstd22_size": 4183,
+      "bav_size": 3386,
+      "zstd22_ratio": 0.3464182194616977,
+      "bav_ratio": 0.2804140786749482,
+      "zstd22_compress_s": 0.002205,
+      "bav_compress_s": 0.29274,
+      "bav_wins": true,
+      "delta_bytes": 797
+    },
+    {
+      "file": "05_source_code.py",
+      "uncompressed": 58780,
+      "zstd22_size": 1370,
+      "bav_size": 1154,
+      "zstd22_ratio": 0.023307247363048657,
+      "bav_ratio": 0.01963252807077237,
+      "zstd22_compress_s": 0.045152,
+      "bav_compress_s": 1.703444,
+      "bav_wins": true,
+      "delta_bytes": 216
+    }
+  ],
+  "totals": {
+    "uncompressed": 218061,
+    "zstd22_size": 38032,
+    "bav_size": 21364,
+    "delta_bytes": 16668
+  },
+  "all_roundtrips_ok": true,
+  "beats_every_file": true,
+  "research_beats_zstd22": true
+}

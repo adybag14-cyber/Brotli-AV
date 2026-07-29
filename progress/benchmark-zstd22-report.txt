@@ -1,0 +1,21 @@
+Brotli-AV vs Zstd-22 — benchmark report
+============================================================
+baseline: Zstd level 22 level=22 pin=0.25.0
+research: Brotli-AV (BAV1) method=auto
+note: Zstd-22 sizes are pure zstd frames (not BAV-wrapped)
+
+file                              raw   zstd22      bav    delta   win
+----------------------------------------------------------------------
+01_plain_text.txt               81601    13882    13798       84   BAV
+02_html_js.html                 35093     1642     1262      380   BAV
+03_binary_records.bin           30512    16955     1764    15191   BAV
+04_mixed_archive.bin            12075     4183     3386      797   BAV
+05_source_code.py               58780     1370     1154      216   BAV
+----------------------------------------------------------------------
+TOTAL                          218061    38032    21364    16668
+
+research_total_compressed_bytes: 21364
+zstd22_total_compressed_bytes:   38032
+research_beats_zstd22_total:     True
+research_beats_zstd22_every_file:True
+all_roundtrips_ok:               True

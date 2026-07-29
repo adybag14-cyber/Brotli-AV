@@ -46,7 +46,7 @@ class TestLossless(unittest.TestCase):
 
     def test_forced_methods(self):
         raw = b"abc" * 500
-        for method in ("store", "deflate", "lzma", "zstd", "auto"):
+        for method in ("store", "deflate", "lzma", "zstd", "brotli", "auto", "research"):
             with self.subTest(method=method):
                 self.assertEqual(decompress(compress(raw, method=method)), raw)
 

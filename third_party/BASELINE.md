@@ -1,25 +1,33 @@
-# Stock Google Brotli baseline
+# Comparison baselines
+
+## Primary: Zstd level 22
 
 | Field | Value |
 |-------|--------|
-| Project | [google/brotli](https://github.com/google/brotli) |
-| Comparison vehicle | Official Python bindings from PyPI |
-| **Pinned version** | **`brotli==1.2.0`** |
-| Quality flag | **`quality=11`** (maximum compression) |
-| Mode | Default generic mode (`brotli.compress(data, quality=11)`) |
+| Engine | [facebook/zstd](https://github.com/facebook/zstd) via PyPI |
+| **Package pin** | **`zstandard==0.25.0`** |
+| **Level** | **22** (maximum) |
+| API | `zstandard.ZstdCompressor(level=22).compress(data)` |
+| Frame type | **Pure Zstd frames** (not BAV-wrapped) |
 | Documented in | `benchmarks/config.json`, `requirements.txt` |
 
-## Why this pin
+Gating win (this goal): research BAV1 compressed size is **strictly smaller than pure Zstd-22 on every fixed corpus file and on the total**.
 
-Quality 11 is the strongest stock Brotli setting commonly used for ratio comparisons. Pinning `1.2.0` keeps harness results reproducible across machines.
+```powershell
+python -m pip install zstandard==0.25.0
+python -c "import zstandard as z; print(z.__version__)"
+```
+
+## Secondary (historical): Google Brotli quality 11
+
+| Field | Value |
+|-------|--------|
+| Package pin | `brotli==1.2.0` |
+| Quality | 11 |
+| Role | Prior goal (beat Brotli on **total** only); still covered by `tests/test_beat_brotli.py` |
 
 ## Install
 
 ```powershell
-python -m pip install brotli==1.2.0
-python -c "import brotli; print(brotli)"
+python -m pip install -r requirements.txt
 ```
-
-## Optional native CLI
-
-If a system `brotli.exe` is present, it is **not** required for the gating harness; the Python bindings call the same libbrotli family and are the documented comparison path for this repo.

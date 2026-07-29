@@ -54,7 +54,7 @@ def build_parser() -> argparse.ArgumentParser:
         "-m",
         "--method",
         default="auto",
-        choices=["auto", "store", "deflate", "lzma", "zstd", "research"],
+        choices=["auto", "store", "deflate", "lzma", "zstd", "brotli", "research"],
         help="compression method (default: auto)",
     )
     c.set_defaults(func=_cmd_compress)

@@ -1,17 +1,24 @@
 {
   "baseline": {
+    "name": "Zstd level 22",
+    "package": "zstandard",
+    "version_pin": "0.25.0",
+    "level": 22,
+    "mode": "ZstdCompressor(level=22).compress(data)",
+    "notes": "Primary comparison baseline. Pure zstandard frames (not BAV-wrapped). Level 22 is maximum zstd compression."
+  },
+  "secondary_baseline": {
     "name": "Google Brotli",
     "package": "brotli",
     "version_pin": "1.2.0",
     "quality": 11,
-    "mode": "generic",
-    "notes": "Official Google Brotli via PyPI brotli==1.2.0 (libbrotli). Quality 11 is maximum compression."
+    "notes": "Historical secondary comparison; prior goal was beat Brotli on total only."
   },
   "research": {
     "name": "Brotli-AV (BAV1)",
     "method": "auto",
     "entry": "python -m bav compress",
-    "notes": "Adaptive multi-backend: store/deflate/lzma-extreme/zstd-22 + research record-transpose path; smallest frame wins."
+    "notes": "Adaptive multi-backend: store/deflate/lzma-extreme/zstd-22/brotli-11 + research transpose and MTF/RLE0 prefilters; smallest BAV1 frame wins."
   },
   "corpus_dir": "corpus",
   "corpus_files": [

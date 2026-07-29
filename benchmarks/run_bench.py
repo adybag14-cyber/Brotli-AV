@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """
-Benchmark harness: research BAV compressor vs stock Google Brotli.
+Benchmark harness: research BAV compressor vs pure Zstd level 22 (primary).
 
-Uses the real shipped bav.compress / brotli.compress entry points.
+Uses the real shipped bav.compress and zstandard ZstdCompressor(level=22).
+Compares against raw Zstd frames (not BAV-wrapped) so header overhead cannot
+fake a win. Optional secondary Brotli column when brotli is installed.
+
 Writes a machine-readable report (JSON + text summary).
 """
 
@@ -17,9 +20,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-import brotli  # noqa: E402
+import zstandard as zstd  # noqa: E402
 from bav.codec import compress as bav_compress  # noqa: E402
 from bav.codec import decompress as bav_decompress  # noqa: E402
+
+try:
+    import brotli as _brotli_mod
+except ImportError:  # pragma: no cover
+    _brotli_mod = None
 
 
 def load_config() -> dict:
@@ -27,76 +35,91 @@ def load_config() -> dict:
     return json.loads(cfg_path.read_text(encoding="utf-8"))
 
 
-def brotli_compress(data: bytes, quality: int) -> bytes:
-    return brotli.compress(data, quality=quality)
+def zstd22_compress(data: bytes, level: int = 22) -> bytes:
+    """Pure Zstd frame at the documented baseline level (no BAV wrapper)."""
+    return zstd.ZstdCompressor(level=level).compress(data)
 
 
-def brotli_decompress(data: bytes) -> bytes:
-    return brotli.decompress(data)
+def zstd22_decompress(frame: bytes) -> bytes:
+    return zstd.ZstdDecompressor().decompress(frame)
 
 
-def bench_file(path: Path, quality: int, method: str) -> dict:
+def bench_file(path: Path, level: int, method: str, include_brotli: bool) -> dict:
     raw = path.read_bytes()
     t0 = time.perf_counter()
-    br = brotli_compress(raw, quality)
-    t_br = time.perf_counter() - t0
+    zframe = zstd22_compress(raw, level)
+    t_z = time.perf_counter() - t0
     t0 = time.perf_counter()
     bav = bav_compress(raw, method=method)
     t_bav = time.perf_counter() - t0
 
-    # Lossless checks on the real codecs
-    if brotli_decompress(br) != raw:
-        raise AssertionError(f"brotli round-trip failed: {path.name}")
+    if zstd22_decompress(zframe) != raw:
+        raise AssertionError(f"zstd round-trip failed: {path.name}")
     if bav_decompress(bav) != raw:
         raise AssertionError(f"bav round-trip failed: {path.name}")
 
-    return {
+    row = {
         "file": path.name,
         "uncompressed": len(raw),
-        "brotli_size": len(br),
+        "zstd22_size": len(zframe),
         "bav_size": len(bav),
-        "brotli_ratio": (len(br) / len(raw)) if raw else 0.0,
+        "zstd22_ratio": (len(zframe) / len(raw)) if raw else 0.0,
         "bav_ratio": (len(bav) / len(raw)) if raw else 0.0,
-        "brotli_compress_s": round(t_br, 6),
+        "zstd22_compress_s": round(t_z, 6),
         "bav_compress_s": round(t_bav, 6),
-        "bav_wins": len(bav) < len(br),
-        "delta_bytes": len(br) - len(bav),
+        "bav_wins": len(bav) < len(zframe),
+        "delta_bytes": len(zframe) - len(bav),
     }
+    if include_brotli and _brotli_mod is not None:
+        br = _brotli_mod.compress(raw, quality=11)
+        if _brotli_mod.decompress(br) != raw:
+            raise AssertionError(f"brotli round-trip failed: {path.name}")
+        row["brotli11_size"] = len(br)
+    return row
 
 
 def format_text(report: dict) -> str:
     lines = []
-    lines.append("Brotli-AV vs Google Brotli — benchmark report")
+    lines.append("Brotli-AV vs Zstd-22 — benchmark report")
     lines.append("=" * 60)
-    lines.append(f"baseline: {report['baseline']['name']} quality={report['baseline']['quality']} pin={report['baseline']['version_pin']}")
-    lines.append(f"research: {report['research']['name']} method={report['research']['method']}")
+    b = report["baseline"]
+    lines.append(
+        f"baseline: {b['name']} level={b.get('level', 22)} pin={b.get('version_pin')}"
+    )
+    lines.append(
+        f"research: {report['research']['name']} method={report['research']['method']}"
+    )
+    lines.append("note: Zstd-22 sizes are pure zstd frames (not BAV-wrapped)")
     lines.append("")
     lines.append(
-        f"{'file':28} {'raw':>8} {'brotli':>8} {'bav':>8} {'delta':>8} {'win':>5}"
+        f"{'file':28} {'raw':>8} {'zstd22':>8} {'bav':>8} {'delta':>8} {'win':>5}"
     )
     lines.append("-" * 70)
     for r in report["files"]:
-        win = "BAV" if r["bav_wins"] else ("TIE" if r["bav_size"] == r["brotli_size"] else "BR")
+        win = "BAV" if r["bav_wins"] else (
+            "TIE" if r["bav_size"] == r["zstd22_size"] else "ZSTD"
+        )
         lines.append(
-            f"{r['file']:28} {r['uncompressed']:8} {r['brotli_size']:8} "
+            f"{r['file']:28} {r['uncompressed']:8} {r['zstd22_size']:8} "
             f"{r['bav_size']:8} {r['delta_bytes']:8} {win:>5}"
         )
     lines.append("-" * 70)
     t = report["totals"]
     lines.append(
-        f"{'TOTAL':28} {t['uncompressed']:8} {t['brotli_size']:8} "
+        f"{'TOTAL':28} {t['uncompressed']:8} {t['zstd22_size']:8} "
         f"{t['bav_size']:8} {t['delta_bytes']:8}"
     )
     lines.append("")
     lines.append(f"research_total_compressed_bytes: {t['bav_size']}")
-    lines.append(f"brotli_total_compressed_bytes:   {t['brotli_size']}")
-    lines.append(f"research_beats_brotli:           {t['bav_size'] < t['brotli_size']}")
+    lines.append(f"zstd22_total_compressed_bytes:   {t['zstd22_size']}")
+    lines.append(f"research_beats_zstd22_total:     {t['bav_size'] < t['zstd22_size']}")
+    lines.append(f"research_beats_zstd22_every_file:{report['beats_every_file']}")
     lines.append(f"all_roundtrips_ok:               {report['all_roundtrips_ok']}")
     return "\n".join(lines) + "\n"
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description="BAV vs Google Brotli benchmark")
+    ap = argparse.ArgumentParser(description="BAV vs pure Zstd-22 benchmark")
     ap.add_argument(
         "-o",
         "--output",
@@ -106,11 +129,16 @@ def main(argv: list[str] | None = None) -> int:
         "--text-output",
         help="write plain-text report to this path",
     )
+    ap.add_argument(
+        "--with-brotli",
+        action="store_true",
+        help="also record Brotli q=11 sizes (secondary, not the gate)",
+    )
     args = ap.parse_args(argv)
 
     cfg = load_config()
     corpus = ROOT / cfg["corpus_dir"]
-    quality = int(cfg["baseline"]["quality"])
+    level = int(cfg["baseline"].get("level", 22))
     method = cfg["research"]["method"]
 
     files = []
@@ -118,21 +146,23 @@ def main(argv: list[str] | None = None) -> int:
         path = corpus / name
         if not path.is_file():
             raise FileNotFoundError(f"missing corpus file: {path}")
-        files.append(bench_file(path, quality, method))
+        files.append(bench_file(path, level, method, args.with_brotli))
 
     totals = {
         "uncompressed": sum(r["uncompressed"] for r in files),
-        "brotli_size": sum(r["brotli_size"] for r in files),
+        "zstd22_size": sum(r["zstd22_size"] for r in files),
         "bav_size": sum(r["bav_size"] for r in files),
         "delta_bytes": sum(r["delta_bytes"] for r in files),
     }
+    beats_every = all(r["bav_size"] < r["zstd22_size"] for r in files)
     report = {
         "baseline": cfg["baseline"],
         "research": cfg["research"],
         "files": files,
         "totals": totals,
         "all_roundtrips_ok": True,
-        "research_beats_brotli": totals["bav_size"] < totals["brotli_size"],
+        "beats_every_file": beats_every,
+        "research_beats_zstd22": totals["bav_size"] < totals["zstd22_size"] and beats_every,
     }
 
     text = format_text(report)
@@ -152,8 +182,11 @@ def main(argv: list[str] | None = None) -> int:
         tp.write_text(text, encoding="utf-8")
         print(f"wrote {tp}")
 
-    if totals["bav_size"] >= totals["brotli_size"]:
-        print("FAIL: research total compressed bytes did not beat stock Brotli", file=sys.stderr)
+    if not beats_every or totals["bav_size"] >= totals["zstd22_size"]:
+        print(
+            "FAIL: research did not strictly beat pure Zstd-22 on every file and total",
+            file=sys.stderr,
+        )
         return 1
     return 0
 

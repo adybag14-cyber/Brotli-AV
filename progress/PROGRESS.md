@@ -1,29 +1,32 @@
 # Progress log
 
-## 2026-07-29 — Workspace bootstrap
+## 2026-07-29 — Beat Zstd-22 on every file + total
 
-- Initialized `E:\brotli-research` git repo → origin `https://github.com/adybag14-cyber/Brotli-AV.git`
-- Scaffolded layout: `src/bav`, `corpus`, `benchmarks`, `tests`, `research`, `progress`, `third_party`, `tools`
-- Implemented BAV1 research codec + CLI (`python -m bav`)
-- Pinned Google Brotli baseline `brotli==1.2.0` @ quality 11
-- Generated fixed multi-type corpus; harness + lossless / beat-brotli / CLI tests
-- Evidence captures: see implementer scratch + this tree’s `progress/benchmark-report.*` when generated
+- Primary baseline retargeted to **pure Zstd level 22** (`zstandard==0.25.0`)
+- Codec: added **Brotli-11** backend + MTF/RLE0 prefilter research path; keep transpose
+- Harness `benchmarks/run_bench.py` compares vs pure zstd frames; fails if any file or total does not win
+- Gating test: `tests/test_beat_zstd22.py` (per-file + total); Brotli total remains secondary
 
-### Measured totals (fixed corpus, Brotli q=11 vs BAV auto)
+### Measured totals (fixed corpus)
 
 | Engine | Total compressed bytes |
 |--------|------------------------:|
-| Google Brotli q=11 | 34097 |
-| Brotli-AV (BAV1 auto) | **21490** |
-| Delta (BR − BAV) | 12607 |
+| Pure Zstd-22 | 38032 |
+| Brotli-AV (BAV1 auto) | **21364** |
+| Delta (Zstd − BAV) | 16668 |
 
-All 8 unit/integration tests OK; CLI compress twice → identical size 13904.
+Every corpus file: BAV size &lt; pure Zstd-22 size.
 
-### Evidence paths (verification run)
+### Evidence paths
 
 | Artifact | Location |
 |----------|----------|
-| Repo setup | implementer scratch `repo-setup.txt` |
-| Lossless tests | `lossless-tests.log` |
-| Benchmark report | `benchmark-report.json` (+ `.txt`); also `progress/benchmark-report.json` |
-| CLI run 1/2 | `cli-run1.log`, `cli-run2.log` |
+| Repo setup | `{SCRATCH}/repo-zstd-goal.txt` |
+| Lossless tests | `{SCRATCH}/lossless-tests.log` |
+| Beat Zstd-22 tests | `{SCRATCH}/beat-zstd22-tests.log` |
+| Benchmark report | `{SCRATCH}/benchmark-zstd22-report.json` (+ `.txt`) |
+| CLI run 1/2 | `{SCRATCH}/cli-run1.log`, `{SCRATCH}/cli-run2.log` |
+
+## Earlier — Beat Google Brotli (total)
+
+See git history / prior progress: BAV total beat Brotli q=11 on the same corpus (total-only gate).
