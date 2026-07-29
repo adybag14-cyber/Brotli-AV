@@ -1,0 +1,4 @@
+# Pinned baseline for fair comparison (Google Brotli official Python bindings)
+brotli==1.2.0
+# Research compressor backends
+zstandard==0.25.0

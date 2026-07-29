@@ -1,0 +1,19 @@
+Brotli-AV vs Google Brotli — benchmark report
+============================================================
+baseline: Google Brotli quality=11 pin=1.2.0
+research: Brotli-AV (BAV1) method=auto
+
+file                              raw   brotli      bav    delta   win
+----------------------------------------------------------------------
+01_plain_text.txt               81601    13776    13904     -128    BR
+02_html_js.html                 35093     1247     1262      -15    BR
+03_binary_records.bin           30512    13973     1764    12209   BAV
+04_mixed_archive.bin            12075     3832     3406      426   BAV
+05_source_code.py               58780     1269     1154      115   BAV
+----------------------------------------------------------------------
+TOTAL                          218061    34097    21490    12607
+
+research_total_compressed_bytes: 21490
+brotli_total_compressed_bytes:   34097
+research_beats_brotli:           True
+all_roundtrips_ok:               True

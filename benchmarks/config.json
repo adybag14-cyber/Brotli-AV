@@ -1,0 +1,29 @@
+{
+  "baseline": {
+    "name": "Google Brotli",
+    "package": "brotli",
+    "version_pin": "1.2.0",
+    "quality": 11,
+    "mode": "generic",
+    "notes": "Official Google Brotli via PyPI brotli==1.2.0 (libbrotli). Quality 11 is maximum compression."
+  },
+  "research": {
+    "name": "Brotli-AV (BAV1)",
+    "method": "auto",
+    "entry": "python -m bav compress",
+    "notes": "Adaptive multi-backend: store/deflate/lzma-extreme/zstd-22 + research record-transpose path; smallest frame wins."
+  },
+  "corpus_dir": "corpus",
+  "corpus_files": [
+    "01_plain_text.txt",
+    "02_html_js.html",
+    "03_binary_records.bin",
+    "04_mixed_archive.bin",
+    "05_source_code.py"
+  ],
+  "edge_files": [
+    "edge_empty.bin",
+    "edge_tiny.txt",
+    "edge_small.txt"
+  ]
+}

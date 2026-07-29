@@ -1,0 +1,86 @@
+{
+  "baseline": {
+    "name": "Google Brotli",
+    "package": "brotli",
+    "version_pin": "1.2.0",
+    "quality": 11,
+    "mode": "generic",
+    "notes": "Official Google Brotli via PyPI brotli==1.2.0 (libbrotli). Quality 11 is maximum compression."
+  },
+  "research": {
+    "name": "Brotli-AV (BAV1)",
+    "method": "auto",
+    "entry": "python -m bav compress",
+    "notes": "Adaptive multi-backend: store/deflate/lzma-extreme/zstd-22 + research record-transpose path; smallest frame wins."
+  },
+  "files": [
+    {
+      "file": "01_plain_text.txt",
+      "uncompressed": 81601,
+      "brotli_size": 13776,
+      "bav_size": 13904,
+      "brotli_ratio": 0.16882146052131713,
+      "bav_ratio": 0.1703900687491575,
+      "brotli_compress_s": 0.043053,
+      "bav_compress_s": 0.161906,
+      "bav_wins": false,
+      "delta_bytes": -128
+    },
+    {
+      "file": "02_html_js.html",
+      "uncompressed": 35093,
+      "brotli_size": 1247,
+      "bav_size": 1262,
+      "brotli_ratio": 0.03553415211010743,
+      "bav_ratio": 0.03596158778103895,
+      "brotli_compress_s": 0.028554,
+      "bav_compress_s": 0.191656,
+      "bav_wins": false,
+      "delta_bytes": -15
+    },
+    {
+      "file": "03_binary_records.bin",
+      "uncompressed": 30512,
+      "brotli_size": 13973,
+      "bav_size": 1764,
+      "brotli_ratio": 0.4579509701101206,
+      "bav_ratio": 0.057813319349764025,
+      "brotli_compress_s": 0.164429,
+      "bav_compress_s": 0.098528,
+      "bav_wins": true,
+      "delta_bytes": 12209
+    },
+    {
+      "file": "04_mixed_archive.bin",
+      "uncompressed": 12075,
+      "brotli_size": 3832,
+      "bav_size": 3406,
+      "brotli_ratio": 0.31734989648033124,
+      "bav_ratio": 0.2820703933747412,
+      "brotli_compress_s": 0.010673,
+      "bav_compress_s": 0.073752,
+      "bav_wins": true,
+      "delta_bytes": 426
+    },
+    {
+      "file": "05_source_code.py",
+      "uncompressed": 58780,
+      "brotli_size": 1269,
+      "bav_size": 1154,
+      "brotli_ratio": 0.02158897584212317,
+      "bav_ratio": 0.01963252807077237,
+      "brotli_compress_s": 0.087703,
+      "bav_compress_s": 0.473144,
+      "bav_wins": true,
+      "delta_bytes": 115
+    }
+  ],
+  "totals": {
+    "uncompressed": 218061,
+    "brotli_size": 34097,
+    "bav_size": 21490,
+    "delta_bytes": 12607
+  },
+  "all_roundtrips_ok": true,
+  "research_beats_brotli": true
+}
