@@ -32,7 +32,7 @@ class TestLossless(unittest.TestCase):
                 frame = compress(raw, method="auto")
                 out = decompress(frame)
                 self.assertEqual(out, raw, f"round-trip mismatch: {path.name}")
-                self.assertGreaterEqual(len(frame), 1 if raw else 18)  # header always present
+                self.assertGreaterEqual(len(frame), 15)  # BAV v2 header always present
 
     def test_roundtrip_empty(self):
         raw = b""
