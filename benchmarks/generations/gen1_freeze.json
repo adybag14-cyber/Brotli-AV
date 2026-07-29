@@ -1,0 +1,13 @@
+{
+  "generation": 1,
+  "role": "freeze",
+  "name": "gen1 freeze (pre-BWT/delta generation bar)",
+  "files": {
+    "01_plain_text.txt": 13798,
+    "02_html_js.html": 1262,
+    "03_binary_records.bin": 1764,
+    "04_mixed_archive.bin": 3386,
+    "05_source_code.py": 1154
+  },
+  "total": 21364
+}

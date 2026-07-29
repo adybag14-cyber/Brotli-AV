@@ -1,0 +1,74 @@
+{
+  "generation": 2,
+  "name": "gen2-win",
+  "freeze_files": {
+    "01_plain_text.txt": 13752,
+    "02_html_js.html": 1166,
+    "03_binary_records.bin": 726,
+    "04_mixed_archive.bin": 2409,
+    "05_source_code.py": 890
+  },
+  "freeze_total": 18943,
+  "win_files": {
+    "01_plain_text.txt": 9943,
+    "02_html_js.html": 1159,
+    "03_binary_records.bin": 630,
+    "04_mixed_archive.bin": 2273,
+    "05_source_code.py": 883
+  },
+  "win_total": 14888,
+  "rows": [
+    {
+      "file": "01_plain_text.txt",
+      "uncompressed": 81601,
+      "frozen": 13752,
+      "new": 9943,
+      "zstd22": 13882,
+      "delta": 3809,
+      "beats_frozen": true,
+      "beats_zstd22": true
+    },
+    {
+      "file": "02_html_js.html",
+      "uncompressed": 35093,
+      "frozen": 1166,
+      "new": 1159,
+      "zstd22": 1642,
+      "delta": 7,
+      "beats_frozen": true,
+      "beats_zstd22": true
+    },
+    {
+      "file": "03_binary_records.bin",
+      "uncompressed": 30512,
+      "frozen": 726,
+      "new": 630,
+      "zstd22": 16955,
+      "delta": 96,
+      "beats_frozen": true,
+      "beats_zstd22": true
+    },
+    {
+      "file": "04_mixed_archive.bin",
+      "uncompressed": 12075,
+      "frozen": 2409,
+      "new": 2273,
+      "zstd22": 4183,
+      "delta": 136,
+      "beats_frozen": true,
+      "beats_zstd22": true
+    },
+    {
+      "file": "05_source_code.py",
+      "uncompressed": 58780,
+      "frozen": 890,
+      "new": 883,
+      "zstd22": 1370,
+      "delta": 7,
+      "beats_frozen": true,
+      "beats_zstd22": true
+    }
+  ],
+  "beats_every_file": true,
+  "beats_total": true
+}

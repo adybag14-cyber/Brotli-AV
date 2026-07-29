@@ -1,0 +1,65 @@
+{
+  "generation": 1,
+  "name": "gen1-win (beat freeze total 21364)",
+  "freeze_source": "benchmarks/prior_bav_baseline.json (original freeze)",
+  "freeze_files": {
+    "01_plain_text.txt": 13798,
+    "02_html_js.html": 1262,
+    "03_binary_records.bin": 1764,
+    "04_mixed_archive.bin": 3386,
+    "05_source_code.py": 1154
+  },
+  "freeze_total": 21364,
+  "win_files": {
+    "01_plain_text.txt": 13752,
+    "02_html_js.html": 1166,
+    "03_binary_records.bin": 726,
+    "04_mixed_archive.bin": 2409,
+    "05_source_code.py": 890
+  },
+  "win_total": 18943,
+  "rows": [
+    {
+      "file": "01_plain_text.txt",
+      "uncompressed": 81601,
+      "frozen": 13798,
+      "live": 13752,
+      "zstd22": 13882,
+      "beats_frozen": true
+    },
+    {
+      "file": "02_html_js.html",
+      "uncompressed": 35093,
+      "frozen": 1262,
+      "live": 1166,
+      "zstd22": 1642,
+      "beats_frozen": true
+    },
+    {
+      "file": "03_binary_records.bin",
+      "uncompressed": 30512,
+      "frozen": 1764,
+      "live": 726,
+      "zstd22": 16955,
+      "beats_frozen": true
+    },
+    {
+      "file": "04_mixed_archive.bin",
+      "uncompressed": 12075,
+      "frozen": 3386,
+      "live": 2409,
+      "zstd22": 4183,
+      "beats_frozen": true
+    },
+    {
+      "file": "05_source_code.py",
+      "uncompressed": 58780,
+      "frozen": 1154,
+      "live": 890,
+      "zstd22": 1370,
+      "beats_frozen": true
+    }
+  ],
+  "beats_every_file": true,
+  "beats_total": true
+}

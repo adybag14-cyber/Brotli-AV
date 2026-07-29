@@ -1,0 +1,13 @@
+{
+  "generation": 2,
+  "role": "freeze",
+  "name": "gen2 freeze (= gen1 win sizes)",
+  "files": {
+    "01_plain_text.txt": 13752,
+    "02_html_js.html": 1166,
+    "03_binary_records.bin": 726,
+    "04_mixed_archive.bin": 2409,
+    "05_source_code.py": 890
+  },
+  "total": 18943
+}
