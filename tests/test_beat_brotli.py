@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 """
-Secondary regression: research compressor total still beats stock Brotli q=11
-on the fixed corpus (historical goal). Primary gate is test_beat_zstd22.py.
-
-Calls the real shipped compressors — no re-implementation of size logic.
+Secondary regression: research compressor total still beats stock Brotli q=11.
 """
 
 from __future__ import annotations
@@ -24,8 +21,7 @@ from bav.codec import decompress as bav_decompress  # noqa: E402
 class TestBeatBrotli(unittest.TestCase):
     def test_total_beats_google_brotli(self):
         cfg = json.loads((ROOT / "benchmarks" / "config.json").read_text(encoding="utf-8"))
-        # Prefer secondary_baseline; fall back if older config shape
-        sec = cfg.get("secondary_baseline") or {}
+        sec = cfg.get("secondary_baseline_brotli") or cfg.get("secondary_baseline") or {}
         quality = int(sec.get("quality", 11))
         method = cfg["research"]["method"]
         corpus = ROOT / cfg["corpus_dir"]

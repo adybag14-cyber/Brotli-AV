@@ -2,33 +2,31 @@
 
 ## Objective (current)
 
-Beat **pure Zstd level 22** on **compressed size for every fixed-corpus file and on the total**, with strict lossless round-trip. Speed is not a gate.
+Strictly beat the **frozen prior-BAV** baseline on every fixed-corpus file and on the total, remain lossless, keep Zstd-22 every-file and Brotli-total regressions green, and publish a frontier size/entropy report (order-0/1 Shannon bounds + residual gaps).
 
-Wire-format compatibility with Zstd or RFC 7932 Brotli is intentionally **not** required.
+## Why self-beat is hard
 
-## Approach v0.2
+The freeze already took the min of prior backends (store/deflate/lzma/zstd/brotli + transpose + MTF/RLE0). Re-selecting the same candidates cannot win. Progress required **new modeling/transforms**.
 
-**Adaptive multi-backend selection** plus light research transforms:
+## Advances in this generation
 
-- Candidate backends: store, zlib-9, LZMA2 extreme, Zstd-22, **Brotli-11**.
-- Research: fixed-width **record transpose** (2/3/4/6/8/12/16) then re-run backends.
-- Research: **MTF**, **RLE0**, and **MTF+RLE0** prefilters then re-run backends.
-- Emit BAV1 frame for the candidate with the smallest payload (stable tie-break on method id).
+| Idea | Effect on fixed corpus |
+|------|-------------------------|
+| **XZ delta + LZMA2** distance search inside LZMA backend | Large win on structured binary (~1KB smaller on records) |
+| **Full-file BWT** + MTF/RLE0 + backend | Wins on HTML, source, plain text margins |
+| **Multi-block** best-backend | Helps heterogeneous / mixed blobs |
+| Faster MTF (rank table) | Same ratios, less overhead in research paths |
 
-### Why wrapping alone is not enough
+## Frontier metrics
 
-A pure “try zstd-22 among backends” selector cannot beat **raw** Zstd-22 when zstd is already best: the BAV header adds overhead. Winning requires either a stronger backend (e.g. Brotli-11 on text) or a transform that improves compressibility enough to pay for the header (transpose on structured binary).
+- `order0_entropy_bytes`: memoryless Shannon bound  
+- `order1_entropy_bytes`: empirical H(X|prev) bound  
+- `residual_gap_vs_order*`: `new_size − bound` (often **negative** when structure is exploited — expected, not a bug)
 
-### Measured insight (fixed corpus)
+These are scientific **reference** numbers, not proofs of optimality.
 
-- Plain English-like text: Brotli-11 often beats Zstd-22 enough to cover the 18-byte BAV header.
-- Structured binary records: column transpose + LZMA collapses far below Zstd-22.
-- HTML / mixed / source: LZMA or Brotli typically beats raw Zstd-22 after selection.
+## Future (not gating)
 
-## Future directions (not gating)
-
-- Block-level method switching
-- Optimal parsing / larger windows on a custom LZ
-- PPM / context-mixing residual coding
-- Domain filters (EXE, RGB, etc.)
-- Broader public suites (Squash, LTCB) after local corpus remains green
+- Faster suffix array / SA-IS for BWT  
+- Block-level BWT, PPM / context mixing, domain filters  
+- External suites (LTCB, Squash) after self-beat stays green  

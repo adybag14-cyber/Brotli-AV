@@ -1,30 +1,33 @@
 # Comparison baselines
 
-## Primary: Zstd level 22
+## Primary: Frozen prior-BAV (self-beat bar)
 
 | Field | Value |
 |-------|--------|
-| Engine | [facebook/zstd](https://github.com/facebook/zstd) via PyPI |
-| **Package pin** | **`zstandard==0.25.0`** |
-| **Level** | **22** (maximum) |
-| API | `zstandard.ZstdCompressor(level=22).compress(data)` |
-| Frame type | **Pure Zstd frames** (not BAV-wrapped) |
-| Documented in | `benchmarks/config.json`, `requirements.txt` |
+| Source | `benchmarks/prior_bav_baseline.json` |
+| Engine | Prior shipped BAV1 `auto` path at freeze time |
+| **Total frozen** | **21364** bytes |
+| Per-file | See JSON `files` map |
+| Gate | New `bav.compress(..., method="auto")` size **&lt; frozen** on **every** corpus file and on the **total** |
 
-Gating win (this goal): research BAV1 compressed size is **strictly smaller than pure Zstd-22 on every fixed corpus file and on the total**.
+This is the “BAV must beat BAV” bar. The freeze is a measured snapshot, not a re-implementation.
 
-```powershell
-python -m pip install zstandard==0.25.0
-python -c "import zstandard as z; print(z.__version__)"
-```
+## Secondary: Zstd level 22
 
-## Secondary (historical): Google Brotli quality 11
+| Field | Value |
+|-------|--------|
+| Package pin | `zstandard==0.25.0` |
+| Level | 22 |
+| API | `ZstdCompressor(level=22).compress(data)` (pure frames) |
+| Gate | Every file + total still strictly smaller (regression) |
+
+## Secondary: Google Brotli quality 11
 
 | Field | Value |
 |-------|--------|
 | Package pin | `brotli==1.2.0` |
 | Quality | 11 |
-| Role | Prior goal (beat Brotli on **total** only); still covered by `tests/test_beat_brotli.py` |
+| Gate | Total only (historical) |
 
 ## Install
 

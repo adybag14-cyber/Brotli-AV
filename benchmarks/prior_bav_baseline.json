@@ -1,0 +1,56 @@
+{
+  "name": "prior-BAV freeze (BAV1 auto at freeze time)",
+  "method": "auto",
+  "format": "BAV1",
+  "commit_note": "measured from shipped compress at freeze; primary self-beat bar",
+  "files": {
+    "01_plain_text.txt": 13798,
+    "02_html_js.html": 1262,
+    "03_binary_records.bin": 1764,
+    "04_mixed_archive.bin": 3386,
+    "05_source_code.py": 1154
+  },
+  "total": 21364,
+  "detail": [
+    {
+      "file": "01_plain_text.txt",
+      "uncompressed": 81601,
+      "frozen_bav_size": 13798,
+      "zstd22_size": 13882,
+      "order0_entropy_bytes": 41085.23,
+      "gap_vs_order0": -27287.23
+    },
+    {
+      "file": "02_html_js.html",
+      "uncompressed": 35093,
+      "frozen_bav_size": 1262,
+      "zstd22_size": 1642,
+      "order0_entropy_bytes": 21330.294,
+      "gap_vs_order0": -20068.294
+    },
+    {
+      "file": "03_binary_records.bin",
+      "uncompressed": 30512,
+      "frozen_bav_size": 1764,
+      "zstd22_size": 16955,
+      "order0_entropy_bytes": 23099.134,
+      "gap_vs_order0": -21335.134
+    },
+    {
+      "file": "04_mixed_archive.bin",
+      "uncompressed": 12075,
+      "frozen_bav_size": 3386,
+      "zstd22_size": 4183,
+      "order0_entropy_bytes": 8267.722,
+      "gap_vs_order0": -4881.722
+    },
+    {
+      "file": "05_source_code.py",
+      "uncompressed": 58780,
+      "frozen_bav_size": 1154,
+      "zstd22_size": 1370,
+      "order0_entropy_bytes": 32774.435,
+      "gap_vs_order0": -31620.435
+    }
+  ]
+}

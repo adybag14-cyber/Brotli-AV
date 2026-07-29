@@ -1,24 +1,29 @@
 {
   "baseline": {
+    "name": "Prior BAV freeze (self-beat bar)",
+    "source": "benchmarks/prior_bav_baseline.json",
+    "notes": "Primary gate: new shipped auto compress must be strictly smaller than frozen prior-BAV sizes on every fixed corpus file and on the total."
+  },
+  "secondary_baseline_zstd": {
     "name": "Zstd level 22",
     "package": "zstandard",
     "version_pin": "0.25.0",
     "level": 22,
     "mode": "ZstdCompressor(level=22).compress(data)",
-    "notes": "Primary comparison baseline. Pure zstandard frames (not BAV-wrapped). Level 22 is maximum zstd compression."
+    "notes": "Secondary regression: pure zstd frames; every-file + total must still beat."
   },
-  "secondary_baseline": {
+  "secondary_baseline_brotli": {
     "name": "Google Brotli",
     "package": "brotli",
     "version_pin": "1.2.0",
     "quality": 11,
-    "notes": "Historical secondary comparison; prior goal was beat Brotli on total only."
+    "notes": "Secondary regression: total only vs Brotli q=11."
   },
   "research": {
     "name": "Brotli-AV (BAV1)",
     "method": "auto",
     "entry": "python -m bav compress",
-    "notes": "Adaptive multi-backend: store/deflate/lzma-extreme/zstd-22/brotli-11 + research transpose and MTF/RLE0 prefilters; smallest BAV1 frame wins."
+    "notes": "Adaptive multi-backend + LZMA delta chains + transpose + MTF/RLE0 + BWT + multi-block; smallest BAV1 frame wins."
   },
   "corpus_dir": "corpus",
   "corpus_files": [

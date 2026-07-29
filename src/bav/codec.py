@@ -3,13 +3,13 @@ BAV1 lossless research codec.
 
 Design goals (see README / research notes):
   - Strictly lossless round-trip.
-  - Beat pure Zstd level 22 on every fixed-corpus file and on the total
-    compressed byte count (primary gate). Secondary: still beat Brotli q=11 total.
-  - Wire format is BAV1 (not Zstd/Brotli wire-compatible); ratio is the target.
+  - Strictly beat the frozen prior-BAV baseline on every fixed-corpus file and total
+    (primary self-beat gate). Secondary: beat pure Zstd-22 every-file + Brotli-11 total.
+  - Wire format is BAV1 (not Zstd/Brotli wire-compatible); ratio is the research target.
 
 Methods tried in auto mode (smallest payload wins, header overhead included):
-  STORE, DEFLATE-9, LZMA-extreme, ZSTD-22, BROTLI-11, research record-transpose,
-  and research prefilters (MTF, RLE0) re-selected among backends.
+  STORE, DEFLATE-9, LZMA-extreme (incl. delta filter chain search), ZSTD-22, BROTLI-11,
+  research record-transpose, MTF/RLE0 prefilters, BWT(+MTF/RLE0)+backend, multi-block.
 """
 
 from __future__ import annotations
@@ -42,13 +42,24 @@ M_TRANSPOSE = 4
 M_BROTLI = 5
 # Research prefilter: filter_id u8, backend u8, then compressed filtered bytes
 M_PREFILTER = 6
+# Research BWT: flags u8, primary u32 LE, backend u8, compressed last-column
+M_BWT = 7
+# Research multi-block: u16 block_size, then repeated (u8 mid, u32 plen, payload)
+M_BLOCKS = 8
 
 # Prefilter IDs (payload[0] when method == M_PREFILTER)
 F_MTF = 1
 F_RLE0 = 2
 F_MTF_RLE0 = 3
 
+# BWT flags
+BWT_F_MTF = 1
+BWT_F_RLE0 = 2
+
 _HEADER = struct.Struct("<4sBBIQI")  # magic, ver, method, flags, orig_size, crc32
+
+# Soft cap for full-file BWT (naive SA is O(n^2 log n) on rotations)
+_BWT_MAX_BYTES = 120_000
 
 
 def _crc32(data: bytes) -> int:
@@ -64,7 +75,23 @@ def _inflate(data: bytes) -> bytes:
 
 
 def _lzma_enc(data: bytes) -> bytes:
-    return lzma.compress(data, preset=9 | lzma.PRESET_EXTREME)
+    """
+    LZMA2 extreme, plus XZ delta+LZMA2 filter chains at several distances.
+    XZ streams are self-describing, so decompress is plain lzma.decompress.
+    """
+    best = lzma.compress(data, preset=9 | lzma.PRESET_EXTREME)
+    for dist in (1, 2, 3, 4, 5, 6, 8, 12, 16):
+        filters = [
+            {"id": lzma.FILTER_DELTA, "dist": dist},
+            {"id": lzma.FILTER_LZMA2, "preset": 9 | lzma.PRESET_EXTREME},
+        ]
+        try:
+            cand = lzma.compress(data, format=lzma.FORMAT_XZ, filters=filters)
+        except Exception:
+            continue
+        if len(cand) < len(best):
+            best = cand
+    return best
 
 
 def _lzma_dec(data: bytes) -> bytes:
@@ -82,7 +109,16 @@ def _zstd_dec(data: bytes) -> bytes:
 
 
 def _brotli_enc(data: bytes) -> bytes:
-    return brotli.compress(data, quality=11)
+    # Try generic + text modes; keep the smaller payload
+    best = brotli.compress(data, quality=11)
+    for mode in (brotli.MODE_TEXT, brotli.MODE_FONT):
+        try:
+            cand = brotli.compress(data, quality=11, mode=mode)
+        except Exception:
+            continue
+        if len(cand) < len(best):
+            best = cand
+    return best
 
 
 def _brotli_dec(data: bytes) -> bytes:
@@ -140,35 +176,42 @@ def _untranspose(data: bytes, width: int) -> bytes:
 
 
 def _mtf_encode(data: bytes) -> bytes:
-    """Move-to-front transform (lossless)."""
+    """Move-to-front transform (lossless). Position table for O(1) symbol→rank."""
+    # pos[symbol] = current rank; table[rank] = symbol
     table = list(range(256))
+    pos = list(range(256))
     out = bytearray(len(data))
     for i, b in enumerate(data):
-        idx = table.index(b)
-        out[i] = idx
-        # move to front
-        del table[idx]
-        table.insert(0, b)
+        r = pos[b]
+        out[i] = r
+        if r:
+            # shift symbols in ranks 0..r-1 up by one; place b at front
+            for j in range(r, 0, -1):
+                s = table[j - 1]
+                table[j] = s
+                pos[s] = j
+            table[0] = b
+            pos[b] = 0
     return bytes(out)
 
 
 def _mtf_decode(data: bytes) -> bytes:
     table = list(range(256))
     out = bytearray(len(data))
-    for i, idx in enumerate(data):
-        b = table[idx]
+    for i, r in enumerate(data):
+        b = table[r]
         out[i] = b
-        del table[idx]
-        table.insert(0, b)
+        if r:
+            for j in range(r, 0, -1):
+                table[j] = table[j - 1]
+            table[0] = b
     return bytes(out)
 
 
 def _rle0_encode(data: bytes) -> bytes:
     """
     Zero-run length encoding (bzip2-style lite): non-zero bytes pass through;
-    runs of zeros become a count in a simple escape form.
-    Format: for each run of zeros of length n>=1, emit 0 then min(n,255) as u8,
-    repeating for long runs. Non-zero byte b emits b as-is.
+    runs of zeros become 0 then count (1..255).
     """
     out = bytearray()
     i = 0
@@ -225,6 +268,39 @@ def _undo_filter(data: bytes, fid: int) -> bytes:
     raise ValueError(f"unknown filter {fid}")
 
 
+def _bwt_encode(data: bytes) -> tuple[bytes, int]:
+    """Burrows–Wheeler transform; returns (last_column, primary_index)."""
+    n = len(data)
+    if n == 0:
+        return b"", 0
+    s = data + data
+    sa = sorted(range(n), key=lambda i: s[i : i + n])
+    last = bytes(data[(i - 1) % n] for i in sa)
+    primary = sa.index(0)
+    return last, primary
+
+
+def _bwt_decode(last: bytes, primary: int) -> bytes:
+    """Inverse BWT via LF-mapping / sorted first-column chain."""
+    n = len(last)
+    if n == 0:
+        return b""
+    if primary < 0 or primary >= n:
+        raise ValueError("BWT primary index out of range")
+    # T[j] = position in L corresponding to F[j] after stable sort by L[i]
+    order = sorted(range(n), key=lambda i: last[i])
+    # Walk: start at primary row; next row is order chain
+    # Standard: result[i] = L[p]; p = index of this L in the sorted F correspondence
+    # Using: p starts as primary; for i in 0..n-1: p = order[p]; out[i] = L[p]
+    # Actually the common form that matches our encode:
+    out = bytearray(n)
+    p = primary
+    for i in range(n):
+        p = order[p]
+        out[i] = last[p]
+    return bytes(out)
+
+
 def _try_backends(data: bytes) -> list[tuple[int, bytes]]:
     """Return list of (method_id, payload) candidates."""
     out: list[tuple[int, bytes]] = []
@@ -248,7 +324,7 @@ def _best_backend(data: bytes) -> tuple[int, bytes]:
 def _research_transpose_candidates(data: bytes) -> list[tuple[int, bytes]]:
     """Research path: fixed-width transpose + best backend for a few widths."""
     results: list[tuple[int, bytes]] = []
-    for width in (2, 3, 4, 6, 8, 12, 16):
+    for width in (2, 3, 4, 5, 6, 8, 12, 16):
         if len(data) < width * 4:
             continue
         transformed = _transpose(data, width)
@@ -268,12 +344,66 @@ def _research_prefilter_candidates(data: bytes) -> list[tuple[int, bytes]]:
             filtered = _apply_filter(data, fid)
         except Exception:
             continue
-        # Skip if filter expanded too much (unlikely to help after entropy coding)
         if len(filtered) > len(data) * 2 + 64:
             continue
         mid, payload = _best_backend(filtered)
         wrapped = bytes([fid & 0xFF, mid & 0xFF]) + payload
         results.append((M_PREFILTER, wrapped))
+    return results
+
+
+def _research_bwt_candidates(data: bytes) -> list[tuple[int, bytes]]:
+    """Research path: full-file BWT (+ optional MTF/RLE0) + best backend."""
+    results: list[tuple[int, bytes]] = []
+    n = len(data)
+    if n < 64 or n > _BWT_MAX_BYTES:
+        return results
+    try:
+        last, primary = _bwt_encode(data)
+    except Exception:
+        return results
+
+    variants: list[tuple[int, bytes]] = [
+        (0, last),
+        (BWT_F_MTF, _mtf_encode(last)),
+        (BWT_F_MTF | BWT_F_RLE0, _rle0_encode(_mtf_encode(last))),
+    ]
+    for flags, transformed in variants:
+        mid, payload = _best_backend(transformed)
+        wrapped = (
+            bytes([flags & 0xFF])
+            + struct.pack("<I", primary)
+            + bytes([mid & 0xFF])
+            + payload
+        )
+        results.append((M_BWT, wrapped))
+    return results
+
+
+def _research_block_candidates(data: bytes) -> list[tuple[int, bytes]]:
+    """
+    Research path: fixed-size blocks, each compressed with the best *simple* backend
+    (no recursive research paths — avoids exponential cost).
+    """
+    results: list[tuple[int, bytes]] = []
+    n = len(data)
+    if n < 1024:
+        return results
+    for bs in (4096, 8192, 16384):
+        if n < bs:
+            continue
+        out = bytearray()
+        out += struct.pack("<H", bs)
+        i = 0
+        while i < n:
+            chunk = data[i : i + bs]
+            mid, payload = _best_backend(chunk)
+            if len(payload) > 0xFFFFFFFF:
+                break
+            out += bytes([mid & 0xFF]) + struct.pack("<I", len(payload)) + payload
+            i += bs
+        else:
+            results.append((M_BLOCKS, bytes(out)))
     return results
 
 
@@ -285,7 +415,7 @@ def compress(data: bytes, *, method: str = "auto") -> bytes:
       "auto"     — try all backends + research paths; pick smallest frame
       "store"    — no compression
       "deflate"  — zlib level 9
-      "lzma"     — LZMA2 extreme
+      "lzma"     — LZMA2 extreme (+ delta chains)
       "zstd"     — zstd level 22
       "brotli"   — brotli quality 11
       "research" — same as auto (all research candidates)
@@ -314,6 +444,8 @@ def compress(data: bytes, *, method: str = "auto") -> bytes:
         candidates.extend(_try_backends(data))
         candidates.extend(_research_transpose_candidates(data))
         candidates.extend(_research_prefilter_candidates(data))
+        candidates.extend(_research_bwt_candidates(data))
+        candidates.extend(_research_block_candidates(data))
 
     if not candidates:
         candidates.append((M_STORE, data))
@@ -361,6 +493,44 @@ def decompress(frame: bytes) -> bytes:
         _, dec = _BACKENDS[backend]
         filtered = dec(payload[2:])
         data = _undo_filter(filtered, fid)
+    elif mid == M_BWT:
+        if len(payload) < 1 + 4 + 1:
+            raise ValueError("BWT payload too short")
+        flags = payload[0]
+        primary = struct.unpack_from("<I", payload, 1)[0]
+        backend = payload[5]
+        if backend not in _BACKENDS:
+            raise ValueError(f"unknown BWT backend {backend}")
+        _, dec = _BACKENDS[backend]
+        transformed = dec(payload[6:])
+        if flags & BWT_F_RLE0:
+            transformed = _rle0_decode(transformed)
+        if flags & BWT_F_MTF:
+            transformed = _mtf_decode(transformed)
+        data = _bwt_decode(transformed, primary)
+    elif mid == M_BLOCKS:
+        if len(payload) < 2:
+            raise ValueError("blocks payload too short")
+        bs = struct.unpack_from("<H", payload, 0)[0]
+        if bs == 0:
+            raise ValueError("invalid block size")
+        pos = 2
+        chunks: list[bytes] = []
+        while pos < len(payload):
+            if pos + 5 > len(payload):
+                raise ValueError("truncated block header")
+            bmid = payload[pos]
+            plen = struct.unpack_from("<I", payload, pos + 1)[0]
+            pos += 5
+            if pos + plen > len(payload):
+                raise ValueError("truncated block payload")
+            if bmid not in _BACKENDS:
+                raise ValueError(f"unknown block backend {bmid}")
+            _, dec = _BACKENDS[bmid]
+            chunks.append(dec(payload[pos : pos + plen]))
+            pos += plen
+        data = b"".join(chunks)
+        # trailing incomplete logical size is OK if orig matches
     elif mid in _BACKENDS:
         _, dec = _BACKENDS[mid]
         data = dec(payload)

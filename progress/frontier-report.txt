@@ -1,0 +1,16 @@
+Brotli-AV scientific frontier size/entropy report
+============================================================
+Order-0/1 Shannon estimates are reference bounds, not Kolmogorov complexity. Negative residual gaps mean the compressor exploited structure beyond memoryless models.
+
+file                              raw   frozen      new         H0         H1      gapH1
+------------------------------------------------------------------------------------------
+01_plain_text.txt               81601    13798    13752    41085.2    31916.3   -18164.3
+02_html_js.html                 35093     1262     1166    21330.3    10538.5    -9372.5
+03_binary_records.bin           30512     1764      726    23099.1    19102.0   -18376.0
+04_mixed_archive.bin            12075     3386     2409     8267.7     5043.3    -2634.3
+05_source_code.py               58780     1154      890    32774.4    18161.0   -17271.0
+------------------------------------------------------------------------------------------
+TOTAL                          218061    21364    18943   126556.8    84761.2   -65818.2
+
+beats_frozen_every_file: True
+beats_frozen_total:      True

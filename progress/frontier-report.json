@@ -1,0 +1,99 @@
+{
+  "title": "Brotli-AV scientific frontier size/entropy report",
+  "disclaimer": "Order-0/1 Shannon estimates are reference bounds, not Kolmogorov complexity. Negative residual gaps mean the compressor exploited structure beyond memoryless models.",
+  "primary_gate": "new_bav_size < frozen_bav_size for every file and total",
+  "prior_bav_baseline": {
+    "01_plain_text.txt": 13798,
+    "02_html_js.html": 1262,
+    "03_binary_records.bin": 1764,
+    "04_mixed_archive.bin": 3386,
+    "05_source_code.py": 1154
+  },
+  "prior_bav_total": 21364,
+  "research_method": "auto",
+  "files": [
+    {
+      "file": "01_plain_text.txt",
+      "uncompressed": 81601,
+      "frozen_bav_size": 13798,
+      "new_bav_size": 13752,
+      "zstd22_size": 13882,
+      "order0_entropy_bytes": 41085.2304,
+      "order1_entropy_bytes": 31916.3062,
+      "residual_gap_vs_order0": -27333.2304,
+      "residual_gap_vs_order1": -18164.3062,
+      "delta_vs_frozen": 46,
+      "beats_frozen": true,
+      "beats_zstd22": true
+    },
+    {
+      "file": "02_html_js.html",
+      "uncompressed": 35093,
+      "frozen_bav_size": 1262,
+      "new_bav_size": 1166,
+      "zstd22_size": 1642,
+      "order0_entropy_bytes": 21330.2938,
+      "order1_entropy_bytes": 10538.5324,
+      "residual_gap_vs_order0": -20164.2938,
+      "residual_gap_vs_order1": -9372.5324,
+      "delta_vs_frozen": 96,
+      "beats_frozen": true,
+      "beats_zstd22": true
+    },
+    {
+      "file": "03_binary_records.bin",
+      "uncompressed": 30512,
+      "frozen_bav_size": 1764,
+      "new_bav_size": 726,
+      "zstd22_size": 16955,
+      "order0_entropy_bytes": 23099.1336,
+      "order1_entropy_bytes": 19102.0078,
+      "residual_gap_vs_order0": -22373.1336,
+      "residual_gap_vs_order1": -18376.0078,
+      "delta_vs_frozen": 1038,
+      "beats_frozen": true,
+      "beats_zstd22": true
+    },
+    {
+      "file": "04_mixed_archive.bin",
+      "uncompressed": 12075,
+      "frozen_bav_size": 3386,
+      "new_bav_size": 2409,
+      "zstd22_size": 4183,
+      "order0_entropy_bytes": 8267.7224,
+      "order1_entropy_bytes": 5043.3452,
+      "residual_gap_vs_order0": -5858.7224,
+      "residual_gap_vs_order1": -2634.3452,
+      "delta_vs_frozen": 977,
+      "beats_frozen": true,
+      "beats_zstd22": true
+    },
+    {
+      "file": "05_source_code.py",
+      "uncompressed": 58780,
+      "frozen_bav_size": 1154,
+      "new_bav_size": 890,
+      "zstd22_size": 1370,
+      "order0_entropy_bytes": 32774.4349,
+      "order1_entropy_bytes": 18161.0452,
+      "residual_gap_vs_order0": -31884.4349,
+      "residual_gap_vs_order1": -17271.0452,
+      "delta_vs_frozen": 264,
+      "beats_frozen": true,
+      "beats_zstd22": true
+    }
+  ],
+  "totals": {
+    "uncompressed": 218061,
+    "frozen_bav_size": 21364,
+    "new_bav_size": 18943,
+    "zstd22_size": 38032,
+    "order0_entropy_bytes": 126556.8151,
+    "order1_entropy_bytes": 84761.2368,
+    "residual_gap_vs_order0": -107613.8151,
+    "residual_gap_vs_order1": -65818.2368,
+    "delta_vs_frozen": 2421
+  },
+  "beats_frozen_every_file": true,
+  "beats_frozen_total": true
+}
