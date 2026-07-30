@@ -16,6 +16,13 @@ The freeze already took the min of prior backends (store/deflate/lzma/zstd/brotl
 | **Full-file BWT** + MTF/RLE0 + backend | Wins on HTML, source, plain text margins |
 | **Multi-block** best-backend | Helps heterogeneous / mixed blobs |
 | Faster MTF (rank table) | Same ratios, less overhead in research paths |
+| **Extended SUB prefilters** (dist 1–16) + XOR4 | Parity path when managed XZ lacks FILTER_DELTA; C# default port |
+| **C# as default port** (`bav.ps1` → `bav-csharp`) | Full research auto; Python remains reference/tests |
+
+## Default port
+
+**C#** (`ports/csharp`, `bav-csharp 0.3.0`) is the default CLI via repo-root `bav.ps1` / `bav.cmd`.  
+Research families match `src/bav/codec.py` (backends, transpose, xform, prefilters, BWT, blocks, parts, token).
 
 ## Frontier metrics
 

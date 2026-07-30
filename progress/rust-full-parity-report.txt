@@ -1,0 +1,20 @@
+Full Rust vs Python auto parity experiment
+==========================================
+CLI default restored to auto on Python.
+Rust port: full backends (store/deflate/lzma/zstd/brotli) + research paths
+(transpose, xform, prefilter, BWT, blocks, parts, token) + rayon parallel families.
+
+Core corpus (method=auto)
+  file                         py_size  rs_size  delta   py_s    rs_s   speedup
+  01_plain_text.txt               9943     9943     +0  77.8s  12.8s    6.1x
+  02_html_js.html                 1159     1159     +0  34.5s  11.6s    3.0x
+  03_binary_records.bin            630      629     -1  35.3s   8.5s    4.1x
+  04_mixed_archive.bin            2273     2281     +8  18.4s   6.6s    2.8x
+  05_source_code.py                883      883     +0  77.8s  12.2s    6.4x
+  TOTAL                          14888    14895     +7  ~243s   ~52s   ~4.6x
+
+Notes
+- Exact match on 3/5 core files; binary 1B better in Rust; mixed 8B worse.
+- Within 5% / 10% size on all core files: YES.
+- Not 500x anymore: both do full research search; Rust is ~3–6x faster.
+- Remaining size gaps: LZMA extreme/delta framing + brotli encoder differences.

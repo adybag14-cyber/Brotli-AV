@@ -1,21 +1,8 @@
-Brotli-AV vs frozen prior-BAV — self-beat report
+Brotli-AV vs frozen prior-BAV self-beat report
 ============================================================
-baseline: Prior BAV freeze (self-beat bar)
-research: Brotli-AV (BAV1) method=auto
-
-file                              raw   frozen      new    delta   win
-------------------------------------------------------------------------
-01_plain_text.txt               81601    13752     9943     3809   NEW
-02_html_js.html                 35093     1166     1159        7   NEW
-03_binary_records.bin           30512      726      630       96   NEW
-04_mixed_archive.bin            12075     2409     2273      136   NEW
-05_source_code.py               58780      890      883        7   NEW
-------------------------------------------------------------------------
-TOTAL                          218061    18943    14888     4055
-
-new_total:                      14888
-frozen_prior_bav_total:         18943
-beats_frozen_total:             True
-beats_frozen_every_file:        True
-beats_zstd22_every_file:        True
-all_roundtrips_ok:              True
+01_plain_text.txt            frozen= 13752 new=  9943 d= 3809 win=True
+02_html_js.html              frozen=  1166 new=  1159 d=    7 win=True
+03_binary_records.bin        frozen=   726 new=   630 d=   96 win=True
+04_mixed_archive.bin         frozen=  2409 new=  2273 d=  136 win=True
+05_source_code.py            frozen=   890 new=   883 d=    7 win=True
+TOTAL frozen=18943 new=14888 beats=True

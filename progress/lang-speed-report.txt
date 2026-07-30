@@ -1,0 +1,20 @@
+BAV multi-language speed report
+method=auto runs=2
+impls: c, c_nasm, cpp, cpp_nasm, csharp, python, ruby, rust, zig
+
+=== Per-impl mean full-corpus times ===
+  c          compress=6.3039s decompress=1.2042s comp_bytes=26742 orig_bytes=218116
+  c_nasm     compress=6.2643s decompress=1.2531s comp_bytes=26742 orig_bytes=218116
+  cpp        compress=0.2098s decompress=0.0739s comp_bytes=26742 orig_bytes=218116
+  cpp_nasm   compress=0.2102s decompress=0.0766s comp_bytes=26742 orig_bytes=218116
+  csharp     compress=2.2428s decompress=0.3770s comp_bytes=27600 orig_bytes=218116
+  python     compress=290.1329s decompress=0.8518s comp_bytes=16912 orig_bytes=218116
+  ruby       compress=11.3092s decompress=1.7779s comp_bytes=26742 orig_bytes=218116
+  rust       compress=0.2157s decompress=0.0722s comp_bytes=25348 orig_bytes=218116
+  zig        compress=2.0104s decompress=0.0603s comp_bytes=26955 orig_bytes=218116
+
+=== Rust / Zig improved over Python? ===
+  rust: YES — rust compress wall time improved over Python (0.2157s vs 290.1329s, 1345.27x)
+  zig: YES — zig compress wall time improved over Python (2.0104s vs 290.1329s, 144.32x)
+
+failures: 0 / 144

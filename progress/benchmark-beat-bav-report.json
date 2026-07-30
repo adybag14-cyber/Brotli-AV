@@ -1,24 +1,11 @@
 {
   "baseline": {
     "name": "Prior BAV freeze (self-beat bar)",
-    "source": "benchmarks/prior_bav_baseline.json",
-    "notes": "Primary gate: new shipped auto compress must be strictly smaller than frozen prior-BAV sizes on every fixed corpus file and on the total."
-  },
-  "prior_bav_baseline": {
-    "total": 18943,
-    "files": {
-      "01_plain_text.txt": 13752,
-      "02_html_js.html": 1166,
-      "03_binary_records.bin": 726,
-      "04_mixed_archive.bin": 2409,
-      "05_source_code.py": 890
-    }
+    "source": "benchmarks/prior_bav_baseline.json"
   },
   "research": {
-    "name": "Brotli-AV (BAV1)",
-    "method": "auto",
-    "entry": "python -m bav compress",
-    "notes": "Adaptive multi-backend + LZMA delta chains + transpose + MTF/RLE0 + BWT + multi-block; smallest BAV1 frame wins."
+    "name": "Brotli-AV (BAV1/2)",
+    "method": "auto"
   },
   "files": [
     {
@@ -28,11 +15,8 @@
       "bav_size": 9943,
       "zstd22_size": 13882,
       "delta_vs_frozen": 3809,
-      "delta_vs_zstd22": 3939,
       "beats_frozen": true,
-      "beats_zstd22": true,
-      "bav_compress_s": 89.419905,
-      "zstd22_compress_s": 0.01219
+      "beats_zstd22": true
     },
     {
       "file": "02_html_js.html",
@@ -41,11 +25,8 @@
       "bav_size": 1159,
       "zstd22_size": 1642,
       "delta_vs_frozen": 7,
-      "delta_vs_zstd22": 483,
       "beats_frozen": true,
-      "beats_zstd22": true,
-      "bav_compress_s": 42.527176,
-      "zstd22_compress_s": 0.028334
+      "beats_zstd22": true
     },
     {
       "file": "03_binary_records.bin",
@@ -54,11 +35,8 @@
       "bav_size": 630,
       "zstd22_size": 16955,
       "delta_vs_frozen": 96,
-      "delta_vs_zstd22": 16325,
       "beats_frozen": true,
-      "beats_zstd22": true,
-      "bav_compress_s": 41.525244,
-      "zstd22_compress_s": 0.003127
+      "beats_zstd22": true
     },
     {
       "file": "04_mixed_archive.bin",
@@ -67,11 +45,8 @@
       "bav_size": 2273,
       "zstd22_size": 4183,
       "delta_vs_frozen": 136,
-      "delta_vs_zstd22": 1910,
       "beats_frozen": true,
-      "beats_zstd22": true,
-      "bav_compress_s": 19.994337,
-      "zstd22_compress_s": 0.00295
+      "beats_zstd22": true
     },
     {
       "file": "05_source_code.py",
@@ -80,22 +55,17 @@
       "bav_size": 883,
       "zstd22_size": 1370,
       "delta_vs_frozen": 7,
-      "delta_vs_zstd22": 487,
       "beats_frozen": true,
-      "beats_zstd22": true,
-      "bav_compress_s": 87.739168,
-      "zstd22_compress_s": 0.055203
+      "beats_zstd22": true
     }
   ],
   "totals": {
     "uncompressed": 218061,
     "frozen_bav_size": 18943,
     "bav_size": 14888,
-    "zstd22_size": 38032,
     "delta_vs_frozen": 4055
   },
   "all_roundtrips_ok": true,
   "beats_every_file": true,
-  "beats_zstd22_every_file": true,
   "research_beats_prior_bav": true
 }

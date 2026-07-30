@@ -58,6 +58,33 @@ F_MTF_RLE0 = 3
 F_SUB1 = 4
 F_SUB4 = 5
 F_XOR1 = 6
+# Extended SUB distances (match Python LZMA delta-chain search as prefilter+backend)
+F_SUB2 = 7
+F_SUB3 = 8
+F_SUB5 = 9
+F_SUB6 = 10
+F_SUB8 = 11
+F_SUB12 = 12
+F_SUB16 = 13
+F_XOR4 = 14
+
+# All prefilters tried in auto / research mode
+_ALL_PREFILTER_IDS = (
+    F_MTF,
+    F_RLE0,
+    F_MTF_RLE0,
+    F_SUB1,
+    F_SUB2,
+    F_SUB3,
+    F_SUB4,
+    F_SUB5,
+    F_SUB6,
+    F_SUB8,
+    F_SUB12,
+    F_SUB16,
+    F_XOR1,
+    F_XOR4,
+)
 
 # BWT flags
 BWT_F_MTF = 1
@@ -378,6 +405,19 @@ def _token_decode_payload(payload: bytes) -> bytes:
     return bytes(out)
 
 
+_SUB_DIST = {
+    F_SUB1: 1,
+    F_SUB2: 2,
+    F_SUB3: 3,
+    F_SUB4: 4,
+    F_SUB5: 5,
+    F_SUB6: 6,
+    F_SUB8: 8,
+    F_SUB12: 12,
+    F_SUB16: 16,
+}
+
+
 def _apply_filter(data: bytes, fid: int) -> bytes:
     if fid == F_MTF:
         return _mtf_encode(data)
@@ -385,12 +425,12 @@ def _apply_filter(data: bytes, fid: int) -> bytes:
         return _rle0_encode(data)
     if fid == F_MTF_RLE0:
         return _rle0_encode(_mtf_encode(data))
-    if fid == F_SUB1:
-        return _sub_delta(data, 1)
-    if fid == F_SUB4:
-        return _sub_delta(data, 4)
+    if fid in _SUB_DIST:
+        return _sub_delta(data, _SUB_DIST[fid])
     if fid == F_XOR1:
         return _xor_delta(data, 1)
+    if fid == F_XOR4:
+        return _xor_delta(data, 4)
     raise ValueError(f"unknown filter {fid}")
 
 
@@ -401,12 +441,12 @@ def _undo_filter(data: bytes, fid: int) -> bytes:
         return _rle0_decode(data)
     if fid == F_MTF_RLE0:
         return _mtf_decode(_rle0_decode(data))
-    if fid == F_SUB1:
-        return _sub_delta_inv(data, 1)
-    if fid == F_SUB4:
-        return _sub_delta_inv(data, 4)
+    if fid in _SUB_DIST:
+        return _sub_delta_inv(data, _SUB_DIST[fid])
     if fid == F_XOR1:
         return _xor_delta_inv(data, 1)
+    if fid == F_XOR4:
+        return _xor_delta_inv(data, 4)
     raise ValueError(f"unknown filter {fid}")
 
 
@@ -497,7 +537,7 @@ def _research_prefilter_candidates(data: bytes) -> list[tuple[int, bytes]]:
     results: list[tuple[int, bytes]] = []
     if len(data) < 32:
         return results
-    for fid in (F_MTF, F_RLE0, F_MTF_RLE0, F_SUB1, F_SUB4, F_XOR1):
+    for fid in _ALL_PREFILTER_IDS:
         try:
             filtered = _apply_filter(data, fid)
         except Exception:
@@ -618,10 +658,12 @@ def _research_parts_candidates(data: bytes) -> list[tuple[int, bytes]]:
                     xp = bytes([w & 0xFF, xid & 0xFF, m2 & 0xFF]) + p2
                     if len(xp) < len(payload):
                         mid, payload = M_XFORM, xp
-            for fid in (F_SUB1, F_SUB4):
+            for fid in _ALL_PREFILTER_IDS:
                 try:
                     f = _apply_filter(chunk, fid)
                 except Exception:
+                    continue
+                if len(f) > len(chunk) * 2 + 64:
                     continue
                 m2, p2 = _best_backend(f)
                 pref = bytes([fid & 0xFF, m2 & 0xFF]) + p2

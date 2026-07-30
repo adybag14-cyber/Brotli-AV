@@ -1,0 +1,25 @@
+[package]
+name = "bav"
+version = "0.2.0"
+edition = "2021"
+description = "BAV research compressor — full Python-parity Rust port"
+license = "MIT"
+
+[[bin]]
+name = "bav-rust"
+path = "src/main.rs"
+
+[dependencies]
+flate2 = "1"
+crc32fast = "1"
+clap = { version = "4", features = ["derive"] }
+# Full backend parity with Python research codec
+xz2 = "0.1"
+zstd = "0.13"
+brotli = "7"
+rayon = "1"
+
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = 3

@@ -1,0 +1,68 @@
+{
+  "title": "ASM-first full research BAV vs full C# port",
+  "asm_design": "NASM kernels (crc/mtf/rle/transpose/delta) + C orchestration; backends zlib+zstd+brotli (no LZMA)",
+  "csharp_design": "Full managed port with zstd+xz+brotli+deflate",
+  "total_asm_bytes": 19861,
+  "total_csharp_bytes": 14908,
+  "total_asm_s": 19.4733,
+  "total_csharp_s": 4.6185,
+  "asm_over_cs_time": 4.216,
+  "cs_over_asm_time": 0.237,
+  "rows": [
+    {
+      "file": "01_plain_text.txt",
+      "raw": 81601,
+      "asm_size": 13791,
+      "csharp_size": 9943,
+      "delta_asm_minus_cs": 3848,
+      "asm_s": 4.8187,
+      "csharp_s": 0.997,
+      "speedup_cs_over_asm": 4.83,
+      "speedup_asm_over_cs": 0.21
+    },
+    {
+      "file": "02_html_js.html",
+      "raw": 35093,
+      "asm_size": 1178,
+      "csharp_size": 1178,
+      "delta_asm_minus_cs": 0,
+      "asm_s": 2.8852,
+      "csharp_s": 0.7014,
+      "speedup_cs_over_asm": 4.11,
+      "speedup_asm_over_cs": 0.24
+    },
+    {
+      "file": "03_binary_records.bin",
+      "raw": 30512,
+      "asm_size": 630,
+      "csharp_size": 630,
+      "delta_asm_minus_cs": 0,
+      "asm_s": 3.0619,
+      "csharp_s": 1.0161,
+      "speedup_cs_over_asm": 3.01,
+      "speedup_asm_over_cs": 0.33
+    },
+    {
+      "file": "04_mixed_archive.bin",
+      "raw": 12075,
+      "asm_size": 3379,
+      "csharp_size": 2274,
+      "delta_asm_minus_cs": 1105,
+      "asm_s": 1.006,
+      "csharp_s": 0.3095,
+      "speedup_cs_over_asm": 3.25,
+      "speedup_asm_over_cs": 0.31
+    },
+    {
+      "file": "05_source_code.py",
+      "raw": 58780,
+      "asm_size": 883,
+      "csharp_size": 883,
+      "delta_asm_minus_cs": 0,
+      "asm_s": 7.7014,
+      "csharp_s": 1.5947,
+      "speedup_cs_over_asm": 4.83,
+      "speedup_asm_over_cs": 0.21
+    }
+  ]
+}
