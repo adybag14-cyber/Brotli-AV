@@ -30,6 +30,13 @@ Artifacts: `gen2_freeze.json`, `gen2_win.json`, `generation_chain.json`.
 
 Chain: **21364 → 18943 → 14895**. Active test bar remains gen2 freeze (18943).
 
+### Default port: C# 0.3.0
+
+- Entry: repo-root `bav.ps1` / `bav.cmd` → `ports/csharp` (`bav-csharp`)
+- Full research auto (backends + transpose/xform/prefilters@SUB1–16/BWT/blocks/parts/token)
+- Main-5 total **14888** (beats freeze 18943); see `progress/csharp-default-report.md`
+- Python remains reference + unit tests; filter IDs aligned for cross-decode
+
 ## Evidence paths
 
 | Artifact | Location |
