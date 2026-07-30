@@ -15,18 +15,28 @@ static std::vector<uint8_t> read_all(const std::string &path) {
 static void write_all(const std::string &path, const std::vector<uint8_t> &data) {
     std::ofstream f(path, std::ios::binary);
     if (!f) throw std::runtime_error("cannot write " + path);
-    f.write(reinterpret_cast<const char *>(data.data()), static_cast<std::streamsize>(data.size()));
+    if (!data.empty())
+        f.write(reinterpret_cast<const char *>(data.data()),
+                static_cast<std::streamsize>(data.size()));
+}
+
+static int usage() {
+    std::cerr <<
+        "BAV research compressor — C++ backup port (full research)\n"
+        "  bav-cpp compress <in> [-o out] [-m auto|store|deflate|lzma|zstd|brotli|research]\n"
+        "  bav-cpp decompress <in> [-o out]\n"
+        "  bav-cpp version\n"
+        "Default method: auto (all backends + full research paths).\n"
+        "Primary port is C# (repo-root bav.ps1); this is the C++ backup.\n";
+    return 2;
 }
 
 int main(int argc, char **argv) {
-    if (argc < 2) {
-        std::cerr << "usage: bav-cpp compress|decompress|version ...\n";
-        return 2;
-    }
+    if (argc < 2) return usage();
     std::string cmd = argv[1];
     try {
-        if (cmd == "version") {
-            std::cout << "bav-cpp 0.1.0\n";
+        if (cmd == "version" || cmd == "--version" || cmd == "-v") {
+            std::cout << bav::version_string() << "\n";
             return 0;
         }
         if (cmd == "compress") {
@@ -37,23 +47,17 @@ int main(int argc, char **argv) {
                     out = argv[++i];
                 else if ((a == "-m" || a == "--method") && i + 1 < argc)
                     mstr = argv[++i];
-                else if (in.empty())
+                else if (in.empty() && a[0] != '-')
                     in = a;
             }
-            if (in.empty()) return 2;
+            if (in.empty()) return usage();
             auto data = read_all(in);
-            bav::Method method = bav::Method::Auto;
-            if (mstr == "store")
-                method = bav::Method::Store;
-            else if (mstr == "deflate")
-                method = bav::Method::Deflate;
-            else if (mstr == "research")
-                method = bav::Method::Research;
+            auto method = bav::parse_method(mstr);
             auto frame = bav::compress(data, method);
             if (out.empty()) out = in + ".bav";
             write_all(out, frame);
-            std::cout << "compressed " << data.size() << " -> " << frame.size() << " bytes ("
-                      << out << ")\n";
+            std::cout << "compressed " << data.size() << " -> " << frame.size()
+                      << " bytes (" << out << ")\n";
             return 0;
         }
         if (cmd == "decompress") {
@@ -62,10 +66,10 @@ int main(int argc, char **argv) {
                 std::string a = argv[i];
                 if ((a == "-o" || a == "--output") && i + 1 < argc)
                     out = argv[++i];
-                else if (in.empty())
+                else if (in.empty() && a[0] != '-')
                     in = a;
             }
-            if (in.empty()) return 2;
+            if (in.empty()) return usage();
             auto frame = read_all(in);
             auto data = bav::decompress(frame);
             if (out.empty()) {
@@ -75,13 +79,13 @@ int main(int argc, char **argv) {
                     out = in + ".out";
             }
             write_all(out, data);
-            std::cout << "decompressed " << frame.size() << " -> " << data.size() << " bytes ("
-                      << out << ")\n";
+            std::cout << "decompressed " << frame.size() << " -> " << data.size()
+                      << " bytes (" << out << ")\n";
             return 0;
         }
     } catch (const std::exception &e) {
         std::cerr << e.what() << "\n";
         return 1;
     }
-    return 2;
+    return usage();
 }

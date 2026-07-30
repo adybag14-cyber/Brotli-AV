@@ -1,46 +1,75 @@
 # Multi-language BAV1 compressor ports
 
-**Default production port: C#** (`ports/csharp`) — full research coverage, invoked via repo-root `bav.ps1` / `bav.cmd`.
+| Role | Port | Path | Build |
+|------|------|------|-------|
+| **Main** | **C#** | `ports/csharp` | `dotnet build -c Release` → `bav-csharp` |
+| **Backup** | **C++** | `ports/cpp` | `powershell -File ports/cpp/build.ps1` → `bav-cpp` |
+| Reference | Python | `src/bav` | `pip install -e .` |
+| Other | Rust, pure ASM, Zig, C, Ruby | under `ports/` | see below |
 
-Python (`src/bav`) remains the ratio/experiment reference and unit-test host.
+Repo-root entry:
 
-| Port | Path | Build | Role |
-|------|------|-------|------|
-| **C# (default)** | `ports/csharp` | `dotnet build -c Release` | Full research + multi-backend; `bav-csharp` |
-| Python | `src/bav` | `pip install -e .` | Reference / tests |
-| Rust | `ports/rust` | `cargo build --release` | Full parity |
-| Pure ASM | `ports/asm` | `powershell -File build.ps1` | NASM transforms + pure NASM lzma/zstd/brotli |
-| Zig | `ports/zig` | `$BAV_ZIG build -Doptimize=ReleaseFast` | See `ZIG_TOOLCHAIN.md` |
-| C / C++ | `ports/c`, `ports/cpp` | gcc/g++ + optional NASM | zlib + research transforms |
-| Ruby | `ports/ruby` | `ruby bav.rb` | stdlib zlib subset |
+```powershell
+.\bav.ps1 compress corpus\01_plain_text.txt -m auto   # C# main
+.\bav.ps1 -impl cpp compress corpus\01_plain_text.txt # C++ backup
+.\bav-cpp.ps1 version                                 # shortcut to C++
+```
 
-## C# full research (default)
+Env: `BAV_IMPL=csharp|cpp`.
+
+## C# main (default)
+
+Full research auto: store, deflate, lzma/xz, zstd-22, brotli, transpose, xform,  
+prefilters (MTF/RLE0/SUB@1–16/XOR), BWT, multi-block, parts, token.
 
 ```powershell
 dotnet build -c Release ports\csharp
-..\bav.ps1 compress corpus\01_plain_text.txt -m auto
-# or:
-.\ports\csharp\bin\Release\net8.0\bav-csharp.exe version
+..\bav.ps1 version
+# bav-csharp 0.3.0 (default port, full research)
 ```
 
-Auto mode families: store, deflate, lzma/xz, zstd-22, brotli, transpose, xform, prefilters (MTF/RLE0/SUB@1–16/XOR), BWT, multi-block, parts, token.
+Packages: `ZstdSharp.Port`, `XZ.NET`; Brotli via BCL.
 
-Packages: `ZstdSharp.Port`, `XZ.NET`; Brotli via `System.IO.Compression.BrotliStream`.
+## C++ backup (full research)
+
+Same candidate families as C#/Python, including **XZ delta+LZMA2 distance search**  
+via liblzma. Parallel research families (`std::thread`).
+
+```powershell
+powershell -File ports\cpp\build.ps1
+.\ports\cpp\bav-cpp.exe version
+# bav-cpp 0.3.0 (backup port, full research)
+```
+
+Deps (fetched/built by `build.ps1`):
+
+- zlib (`-lz`)
+- liblzma (xz 5.6.2 source → static `liblzma.a`)
+- zstd (import lib + DLL from `ports/asm/third_party/zstd`)
+- brotli 1.1.0 sources from `ports/asm/third_party/brotli-src`
+
+## Other ports
+
+| Port | Path | Build |
+|------|------|-------|
+| Python | `src/bav` | `pip install -e .` |
+| Rust | `ports/rust` | `cargo build --release` |
+| Pure ASM | `ports/asm` | `powershell -File build.ps1` |
+| Zig | `ports/zig` | `$BAV_ZIG build -Doptimize=ReleaseFast` |
+| C | `ports/c` | gcc + zlib (subset) |
+| Ruby | `ports/ruby` | `ruby bav.rb` |
 
 ## Semantics
 
-BAV1/BAV2 header: magic `BAV1`, method, flags, orig size, CRC32.  
+BAV1/v2 header: magic `BAV1`, method, flags, orig size, CRC32.  
 Backends: STORE, DEFLATE, LZMA, ZSTD, BROTLI.  
-Research: transpose, xform, prefilter, BWT, blocks, parts, token (language-dependent completeness).
+Research: transpose, xform, prefilter, BWT, blocks, parts, token.
 
 ## Speed harness
 
 ```powershell
-$env:PYTHONPATH = "E:\brotli-research\src"
 python benchmarks/run_lang_bench.py --runs 2 -m auto
 ```
-
-Reports: `progress/lang-speed-report.{json,txt}`.
 
 ## One-shot Windows build
 
@@ -48,4 +77,4 @@ Reports: `progress/lang-speed-report.{json,txt}`.
 powershell -File ports/build_all.ps1
 ```
 
-Build order starts with **C#** (default), then Rust and the rest.
+Order: **C# main → C++ backup → Rust → …**

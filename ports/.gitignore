@@ -11,6 +11,12 @@ csharp/bin/
 csharp/obj/
 csharp/_corpus_out/
 csharp/_t.*
+cpp/*.exe
+cpp/*.obj
+cpp/*.o
+cpp/*.dll
+cpp/_corpus_out/
+cpp/third_party/
 asm/*.exe
 asm/*.obj
 asm/*.o

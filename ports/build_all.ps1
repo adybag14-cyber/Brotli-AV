@@ -14,11 +14,17 @@ if (-not (Test-Path $Nasm)) { $Nasm = "nasm" }
 if (-not (Test-Path $Gcc)) { $Gcc = "gcc" }
 if (-not (Test-Path $Gxx)) { $Gxx = "g++" }
 
-Write-Host "=== C# (DEFAULT full-research port) ==="
+Write-Host "=== C# (MAIN full-research port) ==="
 Push-Location (Join-Path $Ports "csharp")
 dotnet build -c Release 2>&1
 if ($LASTEXITCODE -ne 0) { throw "csharp build failed" }
 & (Join-Path $Ports "csharp\bin\Release\net8.0\bav-csharp.exe") version
+Pop-Location
+
+Write-Host "=== C++ (BACKUP full-research port) ==="
+Push-Location (Join-Path $Ports "cpp")
+powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $Ports "cpp\build.ps1")
+if ($LASTEXITCODE -ne 0) { throw "cpp build failed" }
 Pop-Location
 
 Write-Host "=== Rust ==="
@@ -35,15 +41,6 @@ if ($LASTEXITCODE -ne 0) { throw "c build failed" }
 if ($LASTEXITCODE -ne 0) { throw "nasm assemble failed" }
 & $Gcc -O3 -Wall -DBAV_USE_NASM -o bav-c-nasm.exe bav.c main.c bav_kernels.obj -lz
 if ($LASTEXITCODE -ne 0) { throw "c+nasm build failed" }
-Pop-Location
-
-Write-Host "=== C++ (plain + NASM) ==="
-Push-Location (Join-Path $Ports "cpp")
-& $Gxx -O3 -std=c++17 -Wall -o bav-cpp.exe bav.cpp main.cpp -lz
-if ($LASTEXITCODE -ne 0) { throw "cpp build failed" }
-Copy-Item (Join-Path $Ports "c\bav_kernels.obj") . -Force
-& $Gxx -O3 -std=c++17 -Wall -DBAV_USE_NASM -o bav-cpp-nasm.exe bav.cpp main.cpp bav_kernels.obj -lz
-if ($LASTEXITCODE -ne 0) { throw "cpp+nasm build failed" }
 Pop-Location
 
 Write-Host "=== Zig (canonical adybag14-cyber/zig) ==="

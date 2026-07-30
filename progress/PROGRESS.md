@@ -30,12 +30,17 @@ Artifacts: `gen2_freeze.json`, `gen2_win.json`, `generation_chain.json`.
 
 Chain: **21364 → 18943 → 14895**. Active test bar remains gen2 freeze (18943).
 
-### Default port: C# 0.3.0
+### Default ports: C# main · C++ backup (0.3.0)
 
-- Entry: repo-root `bav.ps1` / `bav.cmd` → `ports/csharp` (`bav-csharp`)
-- Full research auto (backends + transpose/xform/prefilters@SUB1–16/BWT/blocks/parts/token)
-- Main-5 total **14888** (beats freeze 18943); see `progress/csharp-default-report.md`
-- Python remains reference + unit tests; filter IDs aligned for cross-decode
+| Role | Entry | Binary | Main-5 total |
+|------|-------|--------|-------------:|
+| **Main** | `bav.ps1` | `bav-csharp` | **14888** |
+| **Backup** | `bav.ps1 -impl cpp` / `bav-cpp.ps1` | `bav-cpp` | **14869** |
+
+- Full research auto on both (backends + transpose/xform/prefilters@SUB1–16/BWT/blocks/parts/token)
+- C++ also has liblzma **delta+LZMA2** distance search (Python parity)
+- Freeze bar 18943 — both beat total; see `csharp-default-report.md`, `cpp-full-parity-report.md`
+- Python remains reference + unit tests
 
 ## Evidence paths
 

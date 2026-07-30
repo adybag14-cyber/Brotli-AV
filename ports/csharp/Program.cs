@@ -4,7 +4,7 @@ static int Usage()
 {
     Console.Error.WriteLine(
         """
-        BAV research compressor — default port (C# full research)
+        BAV research compressor — MAIN port (C# full research)
         usage:
           bav-csharp compress <in> [-o out] [-m auto|store|deflate|lzma|zstd|brotli|research]
           bav-csharp decompress <in> [-o out]
@@ -19,7 +19,7 @@ if (args.Length == 0) return Usage();
 var cmd = args[0].ToLowerInvariant();
 if (cmd is "version" or "--version" or "-v")
 {
-    Console.WriteLine("bav-csharp 0.3.0 (default port, full research)");
+    Console.WriteLine("bav-csharp 0.3.0 (main port, full research)");
     return 0;
 }
 

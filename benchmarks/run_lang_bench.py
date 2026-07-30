@@ -51,7 +51,7 @@ def discover_impls() -> dict[str, dict]:
     """
     impls: dict[str, dict] = {}
 
-    # Default production: C# full research
+    # Main production: C# full research
     csharp = ROOT / "ports" / "csharp" / "bin" / "Release" / "net8.0" / "bav-csharp.exe"
     if not csharp.is_file():
         csharp = ROOT / "ports" / "csharp" / "bin" / "Release" / "net8.0" / "bav-csharp"
@@ -64,6 +64,18 @@ def discover_impls() -> dict[str, dict]:
             "compress": [str(csharp), "compress"],
             "decompress": [str(csharp), "decompress"],
             "default": True,
+            "role": "main",
+        }
+
+    # Backup production: C++ full research
+    cpp = ROOT / "ports" / "cpp" / "bav-cpp.exe"
+    if not cpp.is_file():
+        cpp = ROOT / "ports" / "cpp" / "bav-cpp"
+    if cpp.is_file():
+        impls["cpp"] = {
+            "compress": [str(cpp), "compress"],
+            "decompress": [str(cpp), "decompress"],
+            "role": "backup",
         }
 
     # Python reference
@@ -95,13 +107,11 @@ def discover_impls() -> dict[str, dict]:
     for name, rel in [
         ("c", ROOT / "ports" / "c" / "bav-c.exe"),
         ("c_nasm", ROOT / "ports" / "c" / "bav-c-nasm.exe"),
-        ("cpp", ROOT / "ports" / "cpp" / "bav-cpp.exe"),
-        ("cpp_nasm", ROOT / "ports" / "cpp" / "bav-cpp-nasm.exe"),
     ]:
         p = rel
         if not p.is_file():
             p = Path(str(rel).replace(".exe", ""))
-        if p.is_file():
+        if p.is_file() and name not in impls:
             impls[name] = {
                 "compress": [str(p), "compress"],
                 "decompress": [str(p), "decompress"],
